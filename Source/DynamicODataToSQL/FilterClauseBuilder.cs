@@ -206,7 +206,14 @@ public class FilterClauseBuilder(Query query, bool tryToParseDates) : QueryNodeV
                 break;
             case "TOUPPER":
             case "TOLOWER":
-                query = query.WhereLike(columnName, rightValue, false);
+                if (operand != "<>")
+                {
+                    query = query.WhereLike(columnName, rightValue, false);
+                }
+                else
+                {
+                    query = query.WhereNotLike(columnName, rightValue, false);
+                }
                 break;
             case "INDEXOF":
                 var nodes = leftNode.Parameters.ToArray();

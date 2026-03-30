@@ -2,12 +2,15 @@
 
   <PropertyGroup Label="Build">
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>Castars-DynamicODataToSQL</PackageId>
+    <Version>2.2.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Label="Package">
     <Product>DynamicODataToSQL</Product>
     <Description>DynamicODataToSQL</Description>
     <PackageTags>odata;sql;dynamic;</PackageTags>
+    <Version>2.2.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

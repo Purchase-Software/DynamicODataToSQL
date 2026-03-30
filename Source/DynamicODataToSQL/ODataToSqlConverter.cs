@@ -33,6 +33,16 @@ public class ODataToSqlConverter(IEdmModelBuilder edmModelBuilder, Compiler sqlC
         var query = BuildSqlKataQuery(tableName, odataQuery, count, tryToParseDates);
         return CompileSqlKataQuery(query);
     }
+
+    public (string, IDictionary<string, object>) ConvertToSQLFilterOnly(
+        string tableName,
+        IDictionary<string, string> odataQuery,
+        bool count = false,
+        bool tryToParseDates = true)
+    {
+        var query = BuildSqlKataQueryFilterOnly(tableName, odataQuery, count, tryToParseDates);
+        return CompileSqlKataQuery(query);
+    }
     public Query ConvertToSQLKataQuery(
         string tableName,
         IDictionary<string, string> odataQuery,
@@ -94,6 +104,22 @@ public class ODataToSqlConverter(IEdmModelBuilder edmModelBuilder, Compiler sqlC
         return BuildSqlKataQueryFromOdataParameters(query, tableName, odataQuery, count, tryToParseDates);
     }
 
+    private Query BuildSqlKataQueryFilterOnly(
+        string tableName,
+        IDictionary<string, string> odataQuery,
+        bool count,
+        bool tryToParseDates)
+    {
+        if (string.IsNullOrWhiteSpace(tableName))
+        {
+            throw new ArgumentNullException(nameof(tableName));
+        }
+
+        var query = new Query(tableName);
+
+        return BuildSqlKataQueryFromOdataParametersFilterOnly(query, tableName, odataQuery, count, tryToParseDates);
+    }
+
     private Query BuildSqlKataQueryFromOdataParameters(Query query, string modelName, IDictionary<string, string> odataQuery, bool count, bool tryToParseDates)
     {
         var parser = GetParser(modelName, odataQuery);
@@ -144,6 +170,19 @@ public class ODataToSqlConverter(IEdmModelBuilder edmModelBuilder, Compiler sqlC
             {
                 query = BuildSelectClause(query, selectClause);
             }
+        }
+
+        return query;
+    }
+    private Query BuildSqlKataQueryFromOdataParametersFilterOnly(Query query, string modelName, IDictionary<string, string> odataQuery, bool count, bool tryToParseDates)
+    {
+        var parser = GetParser(modelName, odataQuery);
+
+        var filterClause = parser.ParseFilter();
+
+        if (filterClause != null)
+        {
+            query = filterClause.Expression.Accept(new FilterClauseBuilder(query, tryToParseDates));
         }
 
         return query;
