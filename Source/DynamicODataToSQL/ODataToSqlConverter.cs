@@ -47,7 +47,7 @@ public class ODataToSqlConverter(IEdmModelBuilder edmModelBuilder, Compiler sqlC
 
         queryString = queryString.Contains("WHERE", StringComparison.OrdinalIgnoreCase)
             ? queryString.Substring(queryString.IndexOf("WHERE", StringComparison.OrdinalIgnoreCase) + 5).TrimStart()
-            : queryString;
+            : "";
 
         ConvertedQuery.Item1 = queryString;
 
