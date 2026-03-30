@@ -41,7 +41,17 @@ public class ODataToSqlConverter(IEdmModelBuilder edmModelBuilder, Compiler sqlC
         bool tryToParseDates = true)
     {
         var query = BuildSqlKataQueryFilterOnly(tableName, odataQuery, count, tryToParseDates);
-        return CompileSqlKataQuery(query);
+        var ConvertedQuery = CompileSqlKataQuery(query);
+
+        var queryString = ConvertedQuery.Item1;
+
+        queryString = queryString.Contains("WHERE", StringComparison.OrdinalIgnoreCase)
+            ? queryString.Substring(queryString.IndexOf("WHERE", StringComparison.OrdinalIgnoreCase) + 5).TrimStart()
+            : queryString;
+
+        ConvertedQuery.Item1 = queryString;
+
+        return ConvertedQuery;
     }
     public Query ConvertToSQLKataQuery(
         string tableName,
