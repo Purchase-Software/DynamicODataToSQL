@@ -115,7 +115,7 @@ public class ODataToSqlConverter(IEdmModelBuilder edmModelBuilder, Compiler sqlC
             throw new ArgumentNullException(nameof(tableName));
         }
 
-        var query = new Query(tableName);
+        var query = new Query();
 
         return BuildSqlKataQueryFromOdataParametersFilterOnly(query, tableName, odataQuery, count, tryToParseDates);
     }
