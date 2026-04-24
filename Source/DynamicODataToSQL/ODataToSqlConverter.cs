@@ -53,6 +53,7 @@ public class ODataToSqlConverter(IEdmModelBuilder edmModelBuilder, Compiler sqlC
 
         return ConvertedQuery;
     }
+
     public Query ConvertToSQLKataQuery(
         string tableName,
         IDictionary<string, string> odataQuery,
@@ -69,6 +70,92 @@ public class ODataToSqlConverter(IEdmModelBuilder edmModelBuilder, Compiler sqlC
     {
         var query = BuildSqlKataQueryFromRawSql(rawSql, odataQuery, count, tryToParseDates);
         return CompileSqlKataQuery(query);
+    }
+
+    public (string, IDictionary<string, object>) AddParametersToExistingSql(
+        string rawSql,
+        IDictionary<string, string> odataQuery,
+        bool count = false,
+        bool tryToParseDates = true)
+    {
+        var query = BuildSqlKataQuery("placeholder", odataQuery, count, tryToParseDates);
+
+        var temp = new Query("DummyTable");
+
+        foreach (var clause in query.Clauses)
+        {
+            if (clause is AbstractCondition || clause is OrderByClause)
+            {
+                temp.Clauses.Add(clause);
+            }
+        }
+
+
+        var ConvertedQuery = CompileSqlKataQuery(query);
+
+        string queryString = ConvertedQuery.Item1;
+
+        var whereIndex = queryString.IndexOf("WHERE", StringComparison.OrdinalIgnoreCase);
+        var orderIndex = queryString.IndexOf("ORDER BY", StringComparison.OrdinalIgnoreCase);
+
+        string where = null;
+        string order = null;
+
+        if (whereIndex >= 0)
+        {
+            where = orderIndex >= 0
+                ? queryString.Substring(whereIndex, orderIndex - whereIndex)
+                : queryString.Substring(whereIndex);
+        }
+
+        if (orderIndex >= 0)
+        {
+            order = queryString.Substring(orderIndex);
+        }
+
+        string newQuery = rawSql;
+
+
+        var oldWhereIndex = rawSql.IndexOf("WHERE", StringComparison.OrdinalIgnoreCase);
+        var oldOrderIndex = rawSql.IndexOf("ORDER BY", StringComparison.OrdinalIgnoreCase);
+
+        if (whereIndex >= 0)
+        {
+
+            if (oldWhereIndex > 0)
+            {
+                where = where.Replace("WHERE", "AND");
+            }
+
+            if (oldOrderIndex > 0)
+            {
+                newQuery = newQuery.Insert(oldOrderIndex, where);
+            }
+            else
+            {
+                newQuery = newQuery + " " + where;
+            }
+
+
+        }
+
+        if (orderIndex >= 0)
+        {
+            if (oldOrderIndex > 0)
+            {
+                newQuery = newQuery.Replace("ORDER BY", order+",");
+            }
+            else
+            {
+                newQuery = newQuery + " " + order;
+            }
+        }
+
+
+
+        ConvertedQuery.Item1 = newQuery;
+
+        return ConvertedQuery;
     }
 
     public Query ConvertToSQLKataQueryFromRawSql(
